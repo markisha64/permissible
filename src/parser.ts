@@ -14,14 +14,11 @@ function bigIntPow(b: bigint, e: bigint): bigint {
 		return b;
 	}
 
+	const x = bigIntPow(b, e / 2n);
 	if (e % 2n === 0n) {
-		const x = bigIntPow(b, e / 2n);
-
 		return x * x;
 	}
 	else {
-		const x = bigIntPow(b, e / 2n);
-
 		return x * x * b;
 	}
 }
