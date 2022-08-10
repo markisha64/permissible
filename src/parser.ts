@@ -1,13 +1,13 @@
 type data = {
 	index: bigint
-	value: bigint
-	max: bigint
+	length: bigint
+	[key: string]: bigint
 }
 
 import { toBigIntLE } from 'bigint-buffer';
 
 type rules = Record<string, string | string[]>
-type rulesCompiled = Record<string, data | Record<string, data>>;
+type rulesCompiled = Record<string, data>;
 
 function bigIntPow(b: bigint, e: bigint): bigint {
 	if (e === 1n) {
@@ -34,24 +34,22 @@ export default class Parser {
 			const toCompile: string | string[] = permissionRules[rule];
 			if (typeof toCompile === 'string') {
 				compiled[rule] = {
-					value: 1n,
 					index,
-					max: 1n,
+					length: 1n,
 				};
 
 				index++;
 			}
 			else {
 				const toEnum: string[] = toCompile;
-				const enumerated: Record<string, data> = {};
+				const enumerated: data = {
+					index,
+					length: BigInt(Math.floor(Math.log2(toEnum.length)) + 1),
+				};
 
 				const max = BigInt(Math.floor(Math.log2(toEnum.length)) + 1);
 				for (let i = 0; i < toEnum.length; i++) {
-					enumerated[toEnum[i]] = {
-						value: BigInt(i),
-						index,
-						max,
-					};
+					enumerated[toEnum[i]] = BigInt(i);
 				}
 
 				compiled[rule] = enumerated;
@@ -66,11 +64,14 @@ export default class Parser {
 		this.permissions = toBigIntLE(Buffer.from(permissions, 'base64'));
 	}
 
-	has(permission: data): boolean {
-		if (permission.max === 1n) {
-			return !!(this.permissions & (permission.value << permission.index));
+	is(permission: data, value: bigint | boolean): boolean {
+		if (permission.length === 1n) {
+			return !!(this.permissions & (1n << permission.index)) === !!value;
 		}
 
-		return permission.value === this.permissions % bigIntPow(2n, permission.index + permission.max) / bigIntPow(2n, permission.index);
+		console.log(this.permissions.toString(2));
+		console.log(value.toString(2));
+
+		return value === this.permissions % bigIntPow(2n, permission.index + permission.length) / bigIntPow(2n, permission.index);
 	}
 }

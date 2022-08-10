@@ -6,7 +6,7 @@ const toCompile: Record<string, string | string[]> = {
 	enum: [
 		'lmao',
 		'asdasd',
-		'3adsad',
+		'test',
 	],
 };
 
@@ -16,4 +16,4 @@ const parsed = new Parser('aaaaa');
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-console.log(parsed.has(compiled.enum.asdasd));
+console.log(parsed.is(compiled.test2, false));
