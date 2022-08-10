@@ -11,6 +11,7 @@
   "author": "markisha64",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^18.6.5",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
     "@typescript-eslint/parser": "^5.33.0",
     "eslint": "^8.21.0",
@@ -18,5 +19,8 @@
   },
   "files": [
     "lib/**/*"
-  ]
+  ],
+  "dependencies": {
+    "bigint-buffer": "^1.1.5"
+  }
 }
