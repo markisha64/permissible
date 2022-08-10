@@ -11,6 +11,9 @@
   "author": "markisha64",
   "license": "MIT",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.33.0",
+    "@typescript-eslint/parser": "^5.33.0",
+    "eslint": "^8.21.0",
     "typescript": "^4.7.4"
   },
   "files": [
