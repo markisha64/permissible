@@ -1,4 +1,4 @@
-import Parser from './parser';
+import { compile, Permissions } from './parser';
 
 const toCompile: Record<string, string | string[]> = {
 	test: 'boolean',
@@ -10,12 +10,21 @@ const toCompile: Record<string, string | string[]> = {
 	],
 };
 
-const compiled = Parser.compile(toCompile);
+const compiled = compile(toCompile);
 
-const parsed = new Parser('a1');
+const json = {
+	test: true,
+	test2: true,
+	enum: 'test',
+};
 
-console.log(parsed.is(compiled.test, true));
+const parsed = Permissions.fromJson(json, compiled);
 
-parsed.set(compiled.test, false);
+console.log(parsed.toJson());
 
-console.log(parsed.is(compiled.test, true));
+
+console.log(parsed.is(compiled.rules.test, true));
+
+parsed.set(compiled.rules.test, false);
+
+console.log(parsed.is(compiled.rules.test, true));

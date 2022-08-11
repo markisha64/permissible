@@ -4,10 +4,15 @@ type data = {
 	[key: string]: bigint
 }
 
-import { toBigIntLE } from 'bigint-buffer';
+type jsonPermissions = Record<string, boolean | string>;
+
+import { toBigIntLE, toBufferLE } from 'bigint-buffer';
 
 type rules = Record<string, string | string[]>
-type rulesCompiled = Record<string, data>;
+type rulesCompiled = {
+	length: number,
+	rules: Record<string, data>,
+};
 
 function bigIntPow(b: bigint, e: bigint): bigint {
 	if (e === 1n) {
@@ -27,45 +32,74 @@ function bigIntPow(b: bigint, e: bigint): bigint {
 	}
 }
 
-export default class Parser {
-	private permissions: bigint;
+export function compile(permissionRules: rules): rulesCompiled {
+	const compiled: rulesCompiled = {
+		length: 0,
+		rules: {},
+	};
 
-	static compile(permissionRules: rules): rulesCompiled {
-		const compiled: rulesCompiled = {};
+	let index = 0n;
+	for (const rule in permissionRules) {
+		const toCompile: string | string[] = permissionRules[rule];
+		if (typeof toCompile === 'string') {
+			compiled.rules[rule] = {
+				index,
+				length: 1n,
+			};
 
-		let index = 0n;
-		for (const rule in permissionRules) {
-			const toCompile: string | string[] = permissionRules[rule];
-			if (typeof toCompile === 'string') {
-				compiled[rule] = {
-					index,
-					length: 1n,
-				};
+			index++;
+		}
+		else {
+			const toEnum: string[] = toCompile;
+			const enumerated: data = {
+				index,
+				length: BigInt(Math.floor(Math.log2(toEnum.length)) + 1),
+			};
 
-				index++;
+			const max = BigInt(Math.floor(Math.log2(toEnum.length)) + 1);
+			for (let i = 0; i < toEnum.length; i++) {
+				enumerated[toEnum[i]] = BigInt(i);
 			}
-			else {
-				const toEnum: string[] = toCompile;
-				const enumerated: data = {
-					index,
-					length: BigInt(Math.floor(Math.log2(toEnum.length)) + 1),
-				};
 
-				const max = BigInt(Math.floor(Math.log2(toEnum.length)) + 1);
-				for (let i = 0; i < toEnum.length; i++) {
-					enumerated[toEnum[i]] = BigInt(i);
-				}
+			compiled.rules[rule] = enumerated;
+			index += max;
+		}
+	}
 
-				compiled[rule] = enumerated;
-				index += max;
+	compiled.length = Number(index) + 1;
+
+	return compiled;
+}
+
+export class Permissions {
+	private permissions: bigint;
+	private compiled: rulesCompiled;
+
+	static fromBase64(permissions: string, compiled: rulesCompiled): Permissions {
+		return new Permissions(toBigIntLE(Buffer.from(permissions, 'base64')), compiled);
+	}
+
+	static fromJson(permissions: jsonPermissions, compiled: rulesCompiled): Permissions {
+		const permissionsObject: Permissions = new Permissions(0n, compiled);
+
+		for (const key in permissions) {
+			const value: string | boolean = permissions[key];
+
+			if (compiled.rules[key].length === 1n && typeof value === 'boolean') {
+				permissionsObject.set(compiled.rules[key], value);
+			}
+
+			if (compiled.rules[key].length > 1n && typeof value === 'string' && compiled.rules[key][value]) {
+				permissionsObject.set(compiled.rules[key], compiled.rules[key][value]);
 			}
 		}
 
-		return compiled;
+		return permissionsObject;
 	}
 
-	constructor(permissions: string) {
-		this.permissions = toBigIntLE(Buffer.from(permissions, 'base64'));
+	private constructor(permissions: bigint, compiled: rulesCompiled) {
+		this.permissions = permissions;
+		this.compiled = compiled;
 	}
 
 	is(permission: data, value: bigint | boolean): boolean {
@@ -92,5 +126,29 @@ export default class Parser {
 		const cleared: bigint = this.permissions >> div << div;
 
 		this.permissions = cleared | mod | value << permission.index;
+	}
+
+	toBase64(): string {
+		return toBufferLE(this.permissions, this.compiled.length).toString('base64');
+	}
+
+	toJson(): jsonPermissions {
+		const json: jsonPermissions = {};
+
+		for (const key in this.compiled.rules) {
+			if (this.compiled.rules[key].length === 1n) {
+				json[key] = this.is(this.compiled.rules[key], true);
+			}
+			else {
+				const keys: string[] = Object.keys(this.compiled.rules[key]);
+				const value: bigint = this.permissions % bigIntPow(2n, this.compiled.rules[key].length + this.compiled.rules[key].index) >> this.compiled.rules[key].index;
+
+				const foundKey: string | undefined = keys.find((val) => this.compiled.rules[key][val] === value && !['index', 'length'].includes(val));
+
+				if (foundKey) json[key] = foundKey;
+			}
+		}
+
+		return json;
 	}
 }
