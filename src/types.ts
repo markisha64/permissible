@@ -5,7 +5,9 @@ export type data = {
 }
 export type jsonPermissions = Record<string, boolean | string>;
 export type rules = Record<string, string | string[]>
-export type rulesCompiled = {
+export type rulesCompiled<T> = {
 	length: number,
-	rules: Record<string, data>,
+	rules: {
+		[key in keyof T]: data
+	}
 };

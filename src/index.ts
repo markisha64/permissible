@@ -1,9 +1,11 @@
 import { toBigIntLE, toBufferLE } from 'bigint-buffer';
 import { data, jsonPermissions, rules, rulesCompiled } from './types';
 
-export function compile(permissionRules: rules): rulesCompiled {
-	const compiled: rulesCompiled = {
+export function compile<T extends rules>(permissionRules: T): rulesCompiled<T> {
+	const compiled: rulesCompiled<T> = {
 		length: 0,
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
 		rules: {},
 	};
 
@@ -43,11 +45,11 @@ export function compile(permissionRules: rules): rulesCompiled {
 class ParameterError extends Error {}
 const base64Regex = /^(?:[A-Za-z\d+/]{4})*(?:[A-Za-z\d+/]{4}|[A-Za-z\d+/]{3}=|[A-Za-z\d+/]{2}={2})$/g;
 
-export class Permissions {
+export class Permissions<T extends rules> {
 	private permissions: bigint;
-	private compiled: rulesCompiled;
+	private compiled: rulesCompiled<T>;
 
-	static fromBase64(permissions: string, compiled: rulesCompiled): Permissions {
+	static fromBase64<U extends rules>(permissions: string, compiled: rulesCompiled<U>): Permissions<U> {
 		if (Math.ceil(compiled.length / 24) * 4 !== permissions.length) {
 			throw new ParameterError(`Invalid string input, expected string of length ${Math.ceil(compiled.length / 24) * 4}, received string of length ${permissions.length}.`);
 		}
@@ -59,8 +61,8 @@ export class Permissions {
 		return new Permissions(toBigIntLE(Buffer.from(permissions, 'base64')), compiled);
 	}
 
-	static fromJson(permissions: jsonPermissions, compiled: rulesCompiled): Permissions {
-		const permissionsObject: Permissions = new Permissions(0n, compiled);
+	static fromJson<U extends rules>(permissions: jsonPermissions, compiled: rulesCompiled<U>): Permissions<U> {
+		const permissionsObject: Permissions<U> = new Permissions(0n, compiled);
 
 		for (const key in permissions) {
 			const value: string | boolean = permissions[key];
@@ -77,7 +79,7 @@ export class Permissions {
 		return permissionsObject;
 	}
 
-	private constructor(permissions: bigint, compiled: rulesCompiled) {
+	private constructor(permissions: bigint, compiled: rulesCompiled<T>) {
 		this.permissions = permissions;
 		this.compiled = compiled;
 	}

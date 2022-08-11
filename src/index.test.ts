@@ -1,7 +1,7 @@
 import { Permissions, compile } from './index';
-import { jsonPermissions, rules, rulesCompiled } from './types';
+import { jsonPermissions, rulesCompiled } from './types';
 
-const schema: rules = {
+const schema = {
 	writeAccess: 'boolean',
 	readAccess: 'boolean',
 	deleteAccess: 'boolean',
@@ -15,7 +15,7 @@ const schema: rules = {
 	visible: 'boolean',
 };
 
-const compiled: rulesCompiled = compile(schema);
+const compiled: rulesCompiled<typeof schema> = compile(schema);
 
 const json: jsonPermissions = {
 	writeAccess: false,
@@ -29,19 +29,19 @@ const json: jsonPermissions = {
 const validBase64: string = Permissions.fromJson(json, compiled).toBase64();
 
 test('from/to json', () => {
-	const permissions: Permissions = Permissions.fromJson(json, compiled);
+	const permissions: Permissions<typeof schema> = Permissions.fromJson(json, compiled);
 
 	expect(permissions.toJson()).toStrictEqual(json);
 });
 
 test('from/to base64', () => {
-	const permissions: Permissions = Permissions.fromBase64(validBase64, compiled);
+	const permissions: Permissions<typeof schema> = Permissions.fromBase64(validBase64, compiled);
 
 	expect(permissions.toBase64()).toBe(validBase64);
 });
 
 test('is/set values', () => {
-	const permissions: Permissions = Permissions.fromJson(json, compiled);
+	const permissions: Permissions<typeof schema> = Permissions.fromJson(json, compiled);
 
 	expect(permissions.is(compiled.rules.writeAccess, true)).toBe(false);
 	expect(permissions.is(compiled.rules.readAccess, true)).toBe(true);
