@@ -62,3 +62,12 @@ test('is/set values', () => {
 	expect(permissions.is(compiled.rules.premium, true)).toBe(true);
 	expect(permissions.is(compiled.rules.visible, true)).toBe(false);
 });
+
+test('string length', () => {
+	expect(() => Permissions.fromBase64('a', compiled)).toThrow('Invalid string input, expected string of length 4, received string of length 1.');
+	expect(() => Permissions.fromBase64('aadasdad', compiled)).toThrow('Invalid string input, expected string of length 4, received string of length 8.');
+});
+
+test('base64', () => {
+	expect(() => Permissions.fromBase64('aa?d', compiled)).toThrow('Invalid base64 string');
+});
