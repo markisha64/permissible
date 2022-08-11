@@ -2,18 +2,15 @@ import { toBigIntLE, toBufferLE } from 'bigint-buffer';
 import { data, jsonPermissions, rules, rulesCompiled } from './types';
 
 export function compile<T extends rules>(permissionRules: T): rulesCompiled<T> {
-	const compiled: rulesCompiled<T> = {
-		length: 0,
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
-		rules: {},
-	};
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	const compiled: rulesCompiled<T> = {};
 
 	let index = 0n;
 	for (const rule in permissionRules) {
 		const toCompile: string | string[] = permissionRules[rule];
 		if (typeof toCompile === 'string') {
-			compiled.rules[rule] = {
+			compiled[rule] = {
 				index,
 				length: 1n,
 			};
@@ -32,14 +29,21 @@ export function compile<T extends rules>(permissionRules: T): rulesCompiled<T> {
 				enumerated[toEnum[i]] = BigInt(i);
 			}
 
-			compiled.rules[rule] = enumerated;
+			compiled[rule] = enumerated;
 			index += max;
 		}
 	}
 
-	compiled.length = Number(index) + 1;
-
 	return compiled;
+}
+
+function compiledLength<T extends rules>(compiled: rulesCompiled<T>): number {
+	let length = 0;
+	for (const key in Object.keys(compiled)) {
+		length += Array.isArray(compiled[key]) ? Number(compiled[key].length)	: 1;
+	}
+
+	return length;
 }
 
 class ParameterError extends Error {}
@@ -50,8 +54,9 @@ export class Permissions<T extends rules> {
 	private compiled: rulesCompiled<T>;
 
 	static fromBase64<U extends rules>(permissions: string, compiled: rulesCompiled<U>): Permissions<U> {
-		if (Math.ceil(compiled.length / 24) * 4 !== permissions.length) {
-			throw new ParameterError(`Invalid string input, expected string of length ${Math.ceil(compiled.length / 24) * 4}, received string of length ${permissions.length}.`);
+		const length: number = compiledLength(compiled);
+		if (Math.ceil(length / 24) * 4 !== permissions.length) {
+			throw new ParameterError(`Invalid string input, expected string of length ${Math.ceil(length / 24) * 4}, received string of length ${permissions.length}.`);
 		}
 
 		if (!base64Regex.exec(permissions)) {
@@ -67,12 +72,12 @@ export class Permissions<T extends rules> {
 		for (const key in permissions) {
 			const value: string | boolean = permissions[key];
 
-			if (compiled.rules[key].length === 1n && typeof value === 'boolean') {
-				permissionsObject.set(compiled.rules[key], value);
+			if (compiled[key].length === 1n && typeof value === 'boolean') {
+				permissionsObject.set(compiled[key], value);
 			}
 
-			if (compiled.rules[key].length > 1n && typeof value === 'string' && compiled.rules[key][value]) {
-				permissionsObject.set(compiled.rules[key], compiled.rules[key][value]);
+			if (compiled[key].length > 1n && typeof value === 'string' && compiled[key][value]) {
+				permissionsObject.set(compiled[key], compiled[key][value]);
 			}
 		}
 
@@ -111,21 +116,23 @@ export class Permissions<T extends rules> {
 	}
 
 	toBase64(): string {
-		return toBufferLE(this.permissions, Math.ceil(this.compiled.length / 24) * 3).toString('base64');
+		const length: number = compiledLength(this.compiled);
+
+		return toBufferLE(this.permissions, Math.ceil(length / 24) * 3).toString('base64');
 	}
 
 	toJson(): jsonPermissions {
 		const json: jsonPermissions = {};
 
-		for (const key in this.compiled.rules) {
-			if (this.compiled.rules[key].length === 1n) {
-				json[key] = this.is(this.compiled.rules[key], true);
+		for (const key in this.compiled) {
+			if (this.compiled[key].length === 1n) {
+				json[key] = this.is(this.compiled[key], true);
 			}
 			else {
-				const keys: string[] = Object.keys(this.compiled.rules[key]);
-				const value: bigint = this.permissions % 2n ** (this.compiled.rules[key].length + this.compiled.rules[key].index) >> this.compiled.rules[key].index;
+				const keys: string[] = Object.keys(this.compiled[key]);
+				const value: bigint = this.permissions % 2n ** (this.compiled[key].length + this.compiled[key].index) >> this.compiled[key].index;
 
-				const foundKey: string | undefined = keys.find((val) => this.compiled.rules[key][val] === value && !['index', 'length'].includes(val));
+				const foundKey: string | undefined = keys.find((val) => this.compiled[key][val] === value && !['index', 'length'].includes(val));
 
 				if (foundKey) json[key] = foundKey;
 			}

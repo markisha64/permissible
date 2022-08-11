@@ -43,24 +43,24 @@ test('from/to base64', () => {
 test('is/set values', () => {
 	const permissions: Permissions<typeof schema> = Permissions.fromJson(json, compiled);
 
-	expect(permissions.is(compiled.rules.writeAccess, true)).toBe(false);
-	expect(permissions.is(compiled.rules.readAccess, true)).toBe(true);
-	expect(permissions.is(compiled.rules.deleteAccess, true)).toBe(false);
-	expect(permissions.is(compiled.rules.type, compiled.rules.type.user)).toBe(true);
-	expect(permissions.is(compiled.rules.premium, true)).toBe(true);
-	expect(permissions.is(compiled.rules.visible, true)).toBe(true);
+	expect(permissions.is(compiled.writeAccess, true)).toBe(false);
+	expect(permissions.is(compiled.readAccess, true)).toBe(true);
+	expect(permissions.is(compiled.deleteAccess, true)).toBe(false);
+	expect(permissions.is(compiled.type, compiled.type.user)).toBe(true);
+	expect(permissions.is(compiled.premium, true)).toBe(true);
+	expect(permissions.is(compiled.visible, true)).toBe(true);
 
-	permissions.set(compiled.rules.type, compiled.rules.type.admin);
-	permissions.set(compiled.rules.visible, false);
-	permissions.set(compiled.rules.writeAccess, true);
-	permissions.set(compiled.rules.deleteAccess, true);
+	permissions.set(compiled.type, compiled.type.admin);
+	permissions.set(compiled.visible, false);
+	permissions.set(compiled.writeAccess, true);
+	permissions.set(compiled.deleteAccess, true);
 
-	expect(permissions.is(compiled.rules.writeAccess, true)).toBe(true);
-	expect(permissions.is(compiled.rules.readAccess, true)).toBe(true);
-	expect(permissions.is(compiled.rules.deleteAccess, true)).toBe(true);
-	expect(permissions.is(compiled.rules.type, compiled.rules.type.admin)).toBe(true);
-	expect(permissions.is(compiled.rules.premium, true)).toBe(true);
-	expect(permissions.is(compiled.rules.visible, true)).toBe(false);
+	expect(permissions.is(compiled.writeAccess, true)).toBe(true);
+	expect(permissions.is(compiled.readAccess, true)).toBe(true);
+	expect(permissions.is(compiled.deleteAccess, true)).toBe(true);
+	expect(permissions.is(compiled.type, compiled.type.admin)).toBe(true);
+	expect(permissions.is(compiled.premium, true)).toBe(true);
+	expect(permissions.is(compiled.visible, true)).toBe(false);
 });
 
 test('string length', () => {
