@@ -2,9 +2,7 @@ import { toBigIntLE, toBufferLE } from 'bigint-buffer';
 import { data, jsonPermissions, rules, rulesCompiled } from './types';
 
 export function compile<T extends rules>(permissionRules: T): rulesCompiled<T> {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
-	const compiled: rulesCompiled<T> = {};
+	const compiled: rulesCompiled<T> = Object.create(permissionRules);
 
 	let index = 0n;
 	for (const rule in permissionRules) {
