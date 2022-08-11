@@ -1,24 +1,6 @@
 import { toBigIntLE, toBufferLE } from 'bigint-buffer';
 import { data, jsonPermissions, rules, rulesCompiled } from './types';
 
-function bigIntPow(b: bigint, e: bigint): bigint {
-	if (e === 1n) {
-		return b;
-	}
-
-	if (e === 0n) {
-		return 1n;
-	}
-
-	const x = bigIntPow(b, e / 2n);
-	if (e % 2n === 0n) {
-		return x * x;
-	}
-	else {
-		return x * x * b;
-	}
-}
-
 export function compile(permissionRules: rules): rulesCompiled {
 	const compiled: rulesCompiled = {
 		length: 0,
@@ -109,7 +91,7 @@ export class Permissions {
 			return !!(this.permissions & (1n << permission.index)) === !!value;
 		}
 
-		return value === this.permissions % bigIntPow(2n, permission.index + permission.length) >> permission.index;
+		return value === this.permissions % 2n ** (permission.index + permission.length) >> permission.index;
 	}
 
 	set(permission: data, value: bigint | boolean): void {
@@ -117,9 +99,9 @@ export class Permissions {
 			value = value ? 1n : 0n;
 		}
 
-		value = value % bigIntPow(2n, permission.length);
+		value = value % 2n ** permission.length;
 
-		const mod: bigint = this.permissions % bigIntPow(2n, permission.index);
+		const mod: bigint = this.permissions % 2n ** permission.index;
 		const div: bigint = permission.index + permission.length;
 		const cleared: bigint = this.permissions >> div << div;
 
@@ -139,7 +121,7 @@ export class Permissions {
 			}
 			else {
 				const keys: string[] = Object.keys(this.compiled.rules[key]);
-				const value: bigint = this.permissions % bigIntPow(2n, this.compiled.rules[key].length + this.compiled.rules[key].index) >> this.compiled.rules[key].index;
+				const value: bigint = this.permissions % 2n ** (this.compiled.rules[key].length + this.compiled.rules[key].index) >> this.compiled.rules[key].index;
 
 				const foundKey: string | undefined = keys.find((val) => this.compiled.rules[key][val] === value && !['index', 'length'].includes(val));
 
