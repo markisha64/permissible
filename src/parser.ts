@@ -1,3 +1,5 @@
+import { toBigIntLE, toBufferLE } from 'bigint-buffer';
+
 type data = {
 	index: bigint
 	length: bigint
@@ -5,9 +7,6 @@ type data = {
 }
 
 type jsonPermissions = Record<string, boolean | string>;
-
-import { toBigIntLE, toBufferLE } from 'bigint-buffer';
-
 type rules = Record<string, string | string[]>
 type rulesCompiled = {
 	length: number,
