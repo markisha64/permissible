@@ -21,6 +21,7 @@ const json = {
 const parsed = Permissions.fromJson(json, compiled);
 
 console.log(parsed.toJson());
+console.log(parsed.toBase64());
 
 
 console.log(parsed.is(compiled.rules.test, true));

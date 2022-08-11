@@ -128,7 +128,7 @@ export class Permissions {
 	}
 
 	toBase64(): string {
-		return toBufferLE(this.permissions, this.compiled.length).toString('base64');
+		return toBufferLE(this.permissions, Math.ceil(this.compiled.length / 8)).toString('base64');
 	}
 
 	toJson(): jsonPermissions {
