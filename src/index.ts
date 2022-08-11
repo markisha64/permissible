@@ -58,11 +58,22 @@ export function compile(permissionRules: rules): rulesCompiled {
 	return compiled;
 }
 
+class ParameterError extends Error {}
+const base64Regex = /^(?:[A-Za-z\d+/]{4})*(?:[A-Za-z\d+/]{4}|[A-Za-z\d+/]{3}=|[A-Za-z\d+/]{2}={2})$/g;
+
 export class Permissions {
 	private permissions: bigint;
 	private compiled: rulesCompiled;
 
 	static fromBase64(permissions: string, compiled: rulesCompiled): Permissions {
+		if (Math.ceil(compiled.length / 24) * 4 !== permissions.length) {
+			throw new ParameterError(`Invalid string input, expected string of length ${Math.ceil(compiled.length / 24) * 4}, received string of length ${permissions.length}.`);
+		}
+
+		if (!base64Regex.exec(permissions)) {
+			throw new ParameterError('Invalid base64 string');
+		}
+
 		return new Permissions(toBigIntLE(Buffer.from(permissions, 'base64')), compiled);
 	}
 
@@ -116,7 +127,7 @@ export class Permissions {
 	}
 
 	toBase64(): string {
-		return toBufferLE(this.permissions, Math.ceil(this.compiled.length / 8)).toString('base64');
+		return toBufferLE(this.permissions, Math.ceil(this.compiled.length / 24) * 3).toString('base64');
 	}
 
 	toJson(): jsonPermissions {
