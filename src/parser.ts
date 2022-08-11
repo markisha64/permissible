@@ -14,6 +14,10 @@ function bigIntPow(b: bigint, e: bigint): bigint {
 		return b;
 	}
 
+	if (e === 0n) {
+		return 1n;
+	}
+
 	const x = bigIntPow(b, e / 2n);
 	if (e % 2n === 0n) {
 		return x * x;
@@ -65,13 +69,28 @@ export default class Parser {
 	}
 
 	is(permission: data, value: bigint | boolean): boolean {
+		if (typeof value === 'boolean') {
+			value = value ? 1n : 0n;
+		}
+
 		if (permission.length === 1n) {
 			return !!(this.permissions & (1n << permission.index)) === !!value;
 		}
 
-		console.log(this.permissions.toString(2));
-		console.log(value.toString(2));
+		return value === this.permissions % bigIntPow(2n, permission.index + permission.length) >> permission.index;
+	}
 
-		return value === this.permissions % bigIntPow(2n, permission.index + permission.length) / bigIntPow(2n, permission.index);
+	set(permission: data, value: bigint | boolean): void {
+		if (typeof value === 'boolean') {
+			value = value ? 1n : 0n;
+		}
+
+		value = value % bigIntPow(2n, permission.length);
+
+		const mod: bigint = this.permissions % bigIntPow(2n, permission.index);
+		const div: bigint = permission.index + permission.length;
+		const cleared: bigint = this.permissions >> div << div;
+
+		this.permissions = cleared | mod | value << permission.index;
 	}
 }
