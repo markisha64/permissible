@@ -27,14 +27,42 @@ const jsonSchema = {
 
 const schema: Schema<typeof jsonSchema> = new Schema(jsonSchema);
 
-const defaultPermissions: string = schema.createDefault().toBase64();
-console.log(defaultPermissions);
-
 const pString = 'OwgA';
 const pFromString: Permissions<typeof jsonSchema> = Permissions.fromBase64(pString, schema);
 
 if (pFromString.is(schema.fields.sendMessage)) {
   console.log('This user can send messages');
+}
+
+console.log('Checking permissions');
+if (pFromString.is(schema.fields.type, schema.fields.type.admin)) {
+  console.log('This user is admin');
+}
+
+if (pFromString.is(schema.fields.kickUsers)) {
+  console.log('This user can kick users');
+}
+
+if (pFromString.is(schema.fields.banUsers)) {
+  console.log('This user can ban users');
+}
+
+console.log('Setting permissions');
+pFromString.set(schema.fields.kickUsers, true);
+pFromString.set(schema.fields.banUsers, true);
+pFromString.set(schema.fields.type, schema.fields.type.admin);
+
+console.log('Checking permissions');
+if (pFromString.is(schema.fields.type, schema.fields.type.admin)) {
+  console.log('This user is admin');
+}
+
+if (pFromString.is(schema.fields.kickUsers)) {
+  console.log('This user can kick users');
+}
+
+if (pFromString.is(schema.fields.banUsers)) {
+  console.log('This user can ban users');
 }
 
 if (pFromString.is(schema.fields.type, schema.fields.type.admin)) {
@@ -59,40 +87,16 @@ const json: JsonPermissions = {
 
 const pFromJson: Permissions<typeof jsonSchema> = Permissions.fromJson(json, schema);
 
-if (pFromString.is(schema.fields.type, schema.fields.type.admin)) {
-  console.log('This user is admin');
-}
-
-if (pFromString.is(schema.fields.kickUsers)) {
-  console.log('This user can kick users');
-}
-
-if (pFromString.is(schema.fields.banUsers)) {
-  console.log('This user can ban users');
-}
-
-pFromJson.set(schema.fields.kickUsers, true);
-pFromJson.set(schema.fields.banUsers, true);
-pFromJson.set(schema.fields.type, schema.fields.type.admin);
-
-if (pFromString.is(schema.fields.type, schema.fields.type.admin)) {
-  console.log('This user is admin');
-}
-
-if (pFromString.is(schema.fields.kickUsers)) {
-  console.log('This user can kick users');
-}
-
-if (pFromString.is(schema.fields.banUsers)) {
-  console.log('This user can ban users');
-}
-
 const pJson: JsonPermissions = pFromJson.toJson();
 console.log(pJson);
 
 if (pJson.createThreads) {
   console.log('This user can create threads.');
 }
+
+const defaultPermissions: Permissions<typeof jsonSchema> = schema.createDefault();
+console.log(defaultPermissions.toJson());
+console.log(defaultPermissions.toBase64());
 
 const pFromCtor: Permissions<typeof jsonSchema> = new Permissions(0n, schema);
 console.log(pFromCtor.toJson());
