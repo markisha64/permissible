@@ -109,30 +109,30 @@ export class Permissions<T extends JsonSchema> {
     return this.permissions;
   }
 
-  is(permission: Field, value: bigint | boolean): boolean {
+  is(field: Field, value: bigint | boolean): boolean {
     if (typeof value === 'boolean') {
       value = value ? 1n : 0n;
     }
 
-    if (permission.length === 1n) {
-      return !!(this.permissions & (1n << permission.index)) === !!value;
+    if (field.length === 1n) {
+      return !!(this.permissions & (1n << field.index)) === !!value;
     }
 
-    return value === this.permissions % 2n ** (permission.index + permission.length) >> permission.index;
+    return value === this.permissions % 2n ** (field.index + field.length) >> field.index;
   }
 
-  set(permission: Field, value: bigint | boolean): void {
+  set(field: Field, value: bigint | boolean): void {
     if (typeof value === 'boolean') {
       value = value ? 1n : 0n;
     }
 
-    value = value % 2n ** permission.length;
+    value = value % 2n ** field.length;
 
-    const mod: bigint = this.permissions % 2n ** permission.index;
-    const div: bigint = permission.index + permission.length;
+    const mod: bigint = this.permissions % 2n ** field.index;
+    const div: bigint = field.index + field.length;
     const cleared: bigint = this.permissions >> div << div;
 
-    this.permissions = cleared | mod | value << permission.index;
+    this.permissions = cleared | mod | value << field.index;
   }
 
   toBase64(): string {
