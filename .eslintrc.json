@@ -48,7 +48,7 @@
     "handle-callback-err": "off",
     "indent": [
       "error",
-      "tab",
+      2,
       { "SwitchCase": 1 }
     ],
     "keyword-spacing": "error",
