@@ -52,24 +52,24 @@ test('from/to base64', () => {
 test('is/set values', () => {
   const permissions: Permissions<typeof jsonSchema> = Permissions.fromJson(json, schema);
 
-  expect(permissions.is(schema.fields.writeAccess, true)).toBe(false);
-  expect(permissions.is(schema.fields.readAccess, true)).toBe(true);
-  expect(permissions.is(schema.fields.deleteAccess, true)).toBe(false);
+  expect(permissions.is(schema.fields.writeAccess)).toBe(false);
+  expect(permissions.is(schema.fields.readAccess)).toBe(true);
+  expect(permissions.is(schema.fields.deleteAccess)).toBe(false);
   expect(permissions.is(schema.fields.type, schema.fields.type.user)).toBe(true);
-  expect(permissions.is(schema.fields.premium, true)).toBe(true);
-  expect(permissions.is(schema.fields.visible, true)).toBe(true);
+  expect(permissions.is(schema.fields.premium)).toBe(true);
+  expect(permissions.is(schema.fields.visible)).toBe(true);
 
   permissions.set(schema.fields.type, schema.fields.type.admin);
   permissions.set(schema.fields.visible, false);
   permissions.set(schema.fields.writeAccess, true);
   permissions.set(schema.fields.deleteAccess, true);
 
-  expect(permissions.is(schema.fields.writeAccess, true)).toBe(true);
-  expect(permissions.is(schema.fields.readAccess, true)).toBe(true);
-  expect(permissions.is(schema.fields.deleteAccess, true)).toBe(true);
+  expect(permissions.is(schema.fields.writeAccess)).toBe(true);
+  expect(permissions.is(schema.fields.readAccess)).toBe(true);
+  expect(permissions.is(schema.fields.deleteAccess)).toBe(true);
   expect(permissions.is(schema.fields.type, schema.fields.type.admin)).toBe(true);
-  expect(permissions.is(schema.fields.premium, true)).toBe(true);
-  expect(permissions.is(schema.fields.visible, true)).toBe(false);
+  expect(permissions.is(schema.fields.premium)).toBe(true);
+  expect(permissions.is(schema.fields.visible)).toBe(false);
 });
 
 test('string length', () => {

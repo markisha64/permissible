@@ -33,7 +33,7 @@ console.log(defaultPermissions);
 const pString = 'OwgA';
 const pFromString: Permissions<typeof jsonSchema> = Permissions.fromBase64(pString, schema);
 
-if (pFromString.is(schema.fields.sendMessage, false)) {
+if (!pFromString.is(schema.fields.sendMessage)) {
   console.log('This user can\'t send messages');
 }
 
@@ -63,11 +63,11 @@ if (pFromString.is(schema.fields.type, schema.fields.type.admin)) {
   console.log('This user is admin');
 }
 
-if (pFromString.is(schema.fields.kickUsers, true)) {
+if (pFromString.is(schema.fields.kickUsers)) {
   console.log('This user can kick users');
 }
 
-if (pFromString.is(schema.fields.banUsers, true)) {
+if (pFromString.is(schema.fields.banUsers)) {
   console.log('This user can ban users');
 }
 
@@ -79,11 +79,11 @@ if (pFromString.is(schema.fields.type, schema.fields.type.admin)) {
   console.log('This user is admin');
 }
 
-if (pFromString.is(schema.fields.kickUsers, true)) {
+if (pFromString.is(schema.fields.kickUsers)) {
   console.log('This user can kick users');
 }
 
-if (pFromString.is(schema.fields.banUsers, true)) {
+if (pFromString.is(schema.fields.banUsers)) {
   console.log('This user can ban users');
 }
 

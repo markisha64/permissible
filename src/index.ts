@@ -109,12 +109,8 @@ export class Permissions<T extends JsonSchema> {
     return this.permissions;
   }
 
-  is(field: Field, value?: bigint | boolean): boolean {
+  is(field: Field, value?: bigint): boolean {
     if (!value) value = 1n;
-
-    if (typeof value === 'boolean') {
-      value = value ? 1n : 0n;
-    }
 
     if (field.length === 1n) {
       return !!(this.permissions & (1n << field.index)) === !!value;
@@ -146,7 +142,7 @@ export class Permissions<T extends JsonSchema> {
 
     for (const key in this.schema.fields) {
       if (this.schema.fields[key].length === 1n) {
-        json[key] = this.is(this.schema.fields[key], true);
+        json[key] = this.is(this.schema.fields[key]);
       }
       else {
         const keys: string[] = Object.keys(this.schema.fields[key]);
