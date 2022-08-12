@@ -1,93 +1,88 @@
 import { toBigIntLE, toBufferLE } from 'bigint-buffer';
-import { data, jsonPermissions, rules, rulesCompiled } from './types';
+import { Data, JsonPermissions, JsonSchema, Fields } from './types';
 
-export function compile<T extends rules>(permissionRules: T): rulesCompiled<T> {
-	const compiled: rulesCompiled<T> = Object.create(permissionRules);
+export class Schema<T extends JsonSchema> {
+	public readonly length: number;
+	public readonly fields: Fields<T>;
 
-	let index = 0n;
-	for (const rule in permissionRules) {
-		const toCompile: string | string[] = permissionRules[rule];
-		if (typeof toCompile === 'string') {
-			compiled[rule] = {
-				index,
-				length: 1n,
-			};
+	constructor(jsonSchema: T) {
+		this.fields = Object.create(jsonSchema);
 
-			index++;
-		}
-		else {
-			const toEnum: string[] = toCompile;
-			const enumerated: data = {
-				index,
-				length: BigInt(Math.floor(Math.log2(toEnum.length)) + 1),
-			};
+		let index = 0n;
+		for (const rule in jsonSchema) {
+			const toCompile: string | string[] = jsonSchema[rule];
+			if (typeof toCompile === 'string') {
+				this.fields[rule] = {
+					index,
+					length: 1n,
+				};
 
-			const max = BigInt(Math.floor(Math.log2(toEnum.length)) + 1);
-			for (let i = 0; i < toEnum.length; i++) {
-				enumerated[toEnum[i]] = BigInt(i);
+				index++;
 			}
+			else {
+				const toEnum: string[] = toCompile;
+				const enumerated: Data = {
+					index,
+					length: BigInt(Math.floor(Math.log2(toEnum.length)) + 1),
+				};
 
-			compiled[rule] = enumerated;
-			index += max;
+				const max = BigInt(Math.floor(Math.log2(toEnum.length)) + 1);
+				for (let i = 0; i < toEnum.length; i++) {
+					enumerated[toEnum[i]] = BigInt(i);
+				}
+
+				this.fields[rule] = enumerated;
+				index += max;
+			}
 		}
+
+		this.length = Number(index);
 	}
-
-	return compiled;
-}
-
-function compiledLength<T extends rules>(compiled: rulesCompiled<T>): number {
-	let length = 0;
-	for (const key in Object.keys(compiled)) {
-		length += Array.isArray(compiled[key]) ? Number(compiled[key].length)	: 1;
-	}
-
-	return length;
 }
 
 class ParameterError extends Error {}
 const base64Regex = /^(?:[A-Za-z\d+/]{4})*(?:[A-Za-z\d+/]{4}|[A-Za-z\d+/]{3}=|[A-Za-z\d+/]{2}={2})$/g;
 
-export class Permissions<T extends rules> {
+export class Permissions<T extends JsonSchema> {
 	private permissions: bigint;
-	private compiled: rulesCompiled<T>;
+	private schema: Schema<T>;
 
-	static fromBase64<U extends rules>(permissions: string, compiled: rulesCompiled<U>): Permissions<U> {
-		const length: number = compiledLength(compiled);
-		if (Math.ceil(length / 24) * 4 !== permissions.length) {
-			throw new ParameterError(`Invalid string input, expected string of length ${Math.ceil(length / 24) * 4}, received string of length ${permissions.length}.`);
+	static fromBase64<U extends JsonSchema>(permissions: string, schema: Schema<U>): Permissions<U> {
+		if (Math.ceil(schema.length / 24) * 4 !== permissions.length) {
+			throw new ParameterError(`Invalid string input, expected string of length ${Math.ceil(schema.length / 24) * 4}, received string of length ${permissions.length}.`);
 		}
 
 		if (!base64Regex.exec(permissions)) {
 			throw new ParameterError('Invalid base64 string');
 		}
 
-		return new Permissions(toBigIntLE(Buffer.from(permissions, 'base64')), compiled);
+		return new Permissions(toBigIntLE(Buffer.from(permissions, 'base64')), schema);
 	}
 
-	static fromJson<U extends rules>(permissions: jsonPermissions, compiled: rulesCompiled<U>): Permissions<U> {
-		const permissionsObject: Permissions<U> = new Permissions(0n, compiled);
+	static fromJson<U extends JsonSchema>(permissions: JsonPermissions, schema: Schema<U>): Permissions<U> {
+		const permissionsObject: Permissions<U> = new Permissions(0n, schema);
 
 		for (const key in permissions) {
 			const value: string | boolean = permissions[key];
 
-			if (compiled[key].length === 1n && typeof value === 'boolean') {
-				permissionsObject.set(compiled[key], value);
+			if (schema.fields[key].length === 1n && typeof value === 'boolean') {
+				permissionsObject.set(schema.fields[key], value);
 			}
 
-			if (compiled[key].length > 1n && typeof value === 'string' && compiled[key][value]) {
-				permissionsObject.set(compiled[key], compiled[key][value]);
+			if (schema.fields[key].length > 1n && typeof value === 'string' && schema.fields[key][value]) {
+				permissionsObject.set(schema.fields[key], schema.fields[key][value]);
 			}
 		}
 
 		return permissionsObject;
 	}
 
-	private constructor(permissions: bigint, compiled: rulesCompiled<T>) {
+	private constructor(permissions: bigint, schema: Schema<T>) {
 		this.permissions = permissions;
-		this.compiled = compiled;
+		this.schema = schema;
 	}
 
-	is(permission: data, value: bigint | boolean): boolean {
+	is(permission: Data, value: bigint | boolean): boolean {
 		if (typeof value === 'boolean') {
 			value = value ? 1n : 0n;
 		}
@@ -99,7 +94,7 @@ export class Permissions<T extends rules> {
 		return value === this.permissions % 2n ** (permission.index + permission.length) >> permission.index;
 	}
 
-	set(permission: data, value: bigint | boolean): void {
+	set(permission: Data, value: bigint | boolean): void {
 		if (typeof value === 'boolean') {
 			value = value ? 1n : 0n;
 		}
@@ -114,23 +109,21 @@ export class Permissions<T extends rules> {
 	}
 
 	toBase64(): string {
-		const length: number = compiledLength(this.compiled);
-
-		return toBufferLE(this.permissions, Math.ceil(length / 24) * 3).toString('base64');
+		return toBufferLE(this.permissions, Math.ceil(this.schema.length / 24) * 3).toString('base64');
 	}
 
-	toJson(): jsonPermissions {
-		const json: jsonPermissions = {};
+	toJson(): JsonPermissions {
+		const json: JsonPermissions = {};
 
-		for (const key in this.compiled) {
-			if (this.compiled[key].length === 1n) {
-				json[key] = this.is(this.compiled[key], true);
+		for (const key in this.schema.fields) {
+			if (this.schema.fields[key].length === 1n) {
+				json[key] = this.is(this.schema.fields[key], true);
 			}
 			else {
-				const keys: string[] = Object.keys(this.compiled[key]);
-				const value: bigint = this.permissions % 2n ** (this.compiled[key].length + this.compiled[key].index) >> this.compiled[key].index;
+				const keys: string[] = Object.keys(this.schema.fields[key]);
+				const value: bigint = this.permissions % 2n ** (this.schema.fields[key].length + this.schema.fields[key].index) >> this.schema.fields[key].index;
 
-				const foundKey: string | undefined = keys.find((val) => this.compiled[key][val] === value && !['index', 'length'].includes(val));
+				const foundKey: string | undefined = keys.find((val) => this.schema.fields[key][val] === value && !['index', 'length'].includes(val));
 
 				if (foundKey) json[key] = foundKey;
 			}

@@ -1,10 +1,10 @@
-export type data = {
+export type Data = {
 	index: bigint
 	length: bigint
 	[key: string]: bigint
 }
-export type jsonPermissions = Record<string, boolean | string>;
-export type rules = Record<string, string | string[]>
-export type rulesCompiled<T> = {
-	[key in keyof T]: data
+export type JsonPermissions = Record<string, boolean | string>;
+export type JsonSchema = Record<string, string | string[]>
+export type Fields<T> = {
+	[key in keyof T]: Data
 };

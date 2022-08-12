@@ -1,7 +1,7 @@
-import { Permissions, compile } from './index';
-import { jsonPermissions, rulesCompiled } from './types';
+import { Permissions, Schema } from './index';
+import { JsonPermissions } from './types';
 
-const schema = {
+const jsonSchema = {
 	writeAccess: 'boolean',
 	readAccess: 'boolean',
 	deleteAccess: 'boolean',
@@ -15,9 +15,9 @@ const schema = {
 	visible: 'boolean',
 };
 
-const compiled: rulesCompiled<typeof schema> = compile(schema);
+const schema: Schema<typeof jsonSchema> = new Schema(jsonSchema);
 
-const json: jsonPermissions = {
+const json: JsonPermissions = {
 	writeAccess: false,
 	readAccess: true,
 	deleteAccess: false,
@@ -26,48 +26,48 @@ const json: jsonPermissions = {
 	visible: true,
 };
 
-const validBase64: string = Permissions.fromJson(json, compiled).toBase64();
+const validBase64: string = Permissions.fromJson(json, schema).toBase64();
 
 test('from/to json', () => {
-	const permissions: Permissions<typeof schema> = Permissions.fromJson(json, compiled);
+	const permissions: Permissions<typeof jsonSchema> = Permissions.fromJson(json, schema);
 
 	expect(permissions.toJson()).toStrictEqual(json);
 });
 
 test('from/to base64', () => {
-	const permissions: Permissions<typeof schema> = Permissions.fromBase64(validBase64, compiled);
+	const permissions: Permissions<typeof jsonSchema> = Permissions.fromBase64(validBase64, schema);
 
 	expect(permissions.toBase64()).toBe(validBase64);
 });
 
 test('is/set values', () => {
-	const permissions: Permissions<typeof schema> = Permissions.fromJson(json, compiled);
+	const permissions: Permissions<typeof jsonSchema> = Permissions.fromJson(json, schema);
 
-	expect(permissions.is(compiled.writeAccess, true)).toBe(false);
-	expect(permissions.is(compiled.readAccess, true)).toBe(true);
-	expect(permissions.is(compiled.deleteAccess, true)).toBe(false);
-	expect(permissions.is(compiled.type, compiled.type.user)).toBe(true);
-	expect(permissions.is(compiled.premium, true)).toBe(true);
-	expect(permissions.is(compiled.visible, true)).toBe(true);
+	expect(permissions.is(schema.fields.writeAccess, true)).toBe(false);
+	expect(permissions.is(schema.fields.readAccess, true)).toBe(true);
+	expect(permissions.is(schema.fields.deleteAccess, true)).toBe(false);
+	expect(permissions.is(schema.fields.type, schema.fields.type.user)).toBe(true);
+	expect(permissions.is(schema.fields.premium, true)).toBe(true);
+	expect(permissions.is(schema.fields.visible, true)).toBe(true);
 
-	permissions.set(compiled.type, compiled.type.admin);
-	permissions.set(compiled.visible, false);
-	permissions.set(compiled.writeAccess, true);
-	permissions.set(compiled.deleteAccess, true);
+	permissions.set(schema.fields.type, schema.fields.type.admin);
+	permissions.set(schema.fields.visible, false);
+	permissions.set(schema.fields.writeAccess, true);
+	permissions.set(schema.fields.deleteAccess, true);
 
-	expect(permissions.is(compiled.writeAccess, true)).toBe(true);
-	expect(permissions.is(compiled.readAccess, true)).toBe(true);
-	expect(permissions.is(compiled.deleteAccess, true)).toBe(true);
-	expect(permissions.is(compiled.type, compiled.type.admin)).toBe(true);
-	expect(permissions.is(compiled.premium, true)).toBe(true);
-	expect(permissions.is(compiled.visible, true)).toBe(false);
+	expect(permissions.is(schema.fields.writeAccess, true)).toBe(true);
+	expect(permissions.is(schema.fields.readAccess, true)).toBe(true);
+	expect(permissions.is(schema.fields.deleteAccess, true)).toBe(true);
+	expect(permissions.is(schema.fields.type, schema.fields.type.admin)).toBe(true);
+	expect(permissions.is(schema.fields.premium, true)).toBe(true);
+	expect(permissions.is(schema.fields.visible, true)).toBe(false);
 });
 
 test('string length', () => {
-	expect(() => Permissions.fromBase64('a', compiled)).toThrow('Invalid string input, expected string of length 4, received string of length 1.');
-	expect(() => Permissions.fromBase64('aadasdad', compiled)).toThrow('Invalid string input, expected string of length 4, received string of length 8.');
+	expect(() => Permissions.fromBase64('a', schema)).toThrow('Invalid string input, expected string of length 4, received string of length 1.');
+	expect(() => Permissions.fromBase64('aadasdad', schema)).toThrow('Invalid string input, expected string of length 4, received string of length 8.');
 });
 
 test('base64', () => {
-	expect(() => Permissions.fromBase64('aa?d', compiled)).toThrow('Invalid base64 string');
+	expect(() => Permissions.fromBase64('aa?d', schema)).toThrow('Invalid base64 string');
 });
