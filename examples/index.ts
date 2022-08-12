@@ -33,8 +33,8 @@ console.log(defaultPermissions);
 const pString = 'OwgA';
 const pFromString: Permissions<typeof jsonSchema> = Permissions.fromBase64(pString, schema);
 
-if (!pFromString.is(schema.fields.sendMessage)) {
-  console.log('This user can\'t send messages');
+if (pFromString.is(schema.fields.sendMessage)) {
+  console.log('This user can send messages');
 }
 
 if (pFromString.is(schema.fields.type, schema.fields.type.admin)) {
