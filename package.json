@@ -15,7 +15,7 @@
     "postversion" : "git push && git push --tags"
   },
   "keywords": [],
-  "author": "markisha64",
+  "author": "Marko Grizelj <marko.grizelj03@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^28.1.6",
