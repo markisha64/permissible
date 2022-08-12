@@ -109,7 +109,9 @@ export class Permissions<T extends JsonSchema> {
     return this.permissions;
   }
 
-  is(field: Field, value: bigint | boolean): boolean {
+  is(field: Field, value?: bigint | boolean): boolean {
+    if (!value) value = 1n;
+
     if (typeof value === 'boolean') {
       value = value ? 1n : 0n;
     }
