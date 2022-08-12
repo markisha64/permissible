@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2020",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "./lib",
+    "strict": true
+  },
+  "exclude": [
+    "node_modules",
+    "lib",
+    "examples"
+  ]
+}
