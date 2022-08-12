@@ -100,3 +100,11 @@ console.log(defaultPermissions.toBase64());
 
 const pFromCtor: Permissions<typeof jsonSchema> = new Permissions(0n, schema);
 console.log(pFromCtor.toJson());
+
+const newJsonSchema = {
+  a: true,
+  b: false,
+};
+
+const newSchema = new Schema(newJsonSchema);
+console.log(newSchema.createDefault().toJson());
