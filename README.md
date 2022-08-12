@@ -234,6 +234,18 @@ console.log(defaultPermissions.toBase64());
 }
 OwgA
 ```
+<br/>
 
+### Type inference
+Types can be inferred, this is valid typescript.
 
+```typescript
+const newJsonSchema = {
+  a: true,
+  b: false,
+};
+
+const newSchema = new Schema(newJsonSchema);
+console.log(newSchema.createDefault().toJson());
+```
 
