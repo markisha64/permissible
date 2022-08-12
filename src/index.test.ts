@@ -2,17 +2,20 @@ import { Permissions, Schema } from './index';
 import { JsonPermissions } from './types';
 
 const jsonSchema = {
-	writeAccess: 'boolean',
-	readAccess: 'boolean',
-	deleteAccess: 'boolean',
-	type: [
-		'moderator',
-		'admin',
-		'user',
-		'guest',
-	],
-	premium: 'boolean',
-	visible: 'boolean',
+	writeAccess: false,
+	readAccess: true,
+	deleteAccess: false,
+	type: {
+		default: 'user',
+		fields: [
+			'moderator',
+			'admin',
+			'user',
+			'guest',
+		],
+	},
+	premium: true,
+	visible: true,
 };
 
 const schema: Schema<typeof jsonSchema> = new Schema(jsonSchema);
@@ -27,6 +30,12 @@ const json: JsonPermissions = {
 };
 
 const validBase64: string = Permissions.fromJson(json, schema).toBase64();
+
+test('create default', () => {
+	const permissions: Permissions<typeof jsonSchema> = Permissions.fromJson(json, schema);
+
+	expect(schema.createDefault().valueOf()).toBe(permissions.valueOf());
+});
 
 test('from/to json', () => {
 	const permissions: Permissions<typeof jsonSchema> = Permissions.fromJson(json, schema);

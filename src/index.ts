@@ -1,18 +1,19 @@
 import { toBigIntLE, toBufferLE } from 'bigint-buffer';
-import { Data, JsonPermissions, JsonSchema, Fields } from './types';
+import { Field, JsonPermissions, JsonSchema, Fields } from './types';
 
 export class Schema<T extends JsonSchema> {
 	public readonly length: number;
 	public readonly fields: Fields<T>;
+	private readonly default: bigint;
 
 	constructor(jsonSchema: T) {
 		this.fields = Object.create(jsonSchema);
 
 		let index = 0n;
-		for (const rule in jsonSchema) {
-			const toCompile: string | string[] = jsonSchema[rule];
-			if (typeof toCompile === 'string') {
-				this.fields[rule] = {
+		for (const field in jsonSchema) {
+			const value: boolean | { default: string, fields: string[] } = jsonSchema[field];
+			if (typeof value === 'boolean') {
+				this.fields[field] = {
 					index,
 					length: 1n,
 				};
@@ -20,23 +21,43 @@ export class Schema<T extends JsonSchema> {
 				index++;
 			}
 			else {
-				const toEnum: string[] = toCompile;
-				const enumerated: Data = {
+				const enumerated: Field = {
 					index,
-					length: BigInt(Math.floor(Math.log2(toEnum.length)) + 1),
+					length: BigInt(Math.floor(Math.log2(value.fields.length)) + 1),
 				};
 
-				const max = BigInt(Math.floor(Math.log2(toEnum.length)) + 1);
-				for (let i = 0; i < toEnum.length; i++) {
-					enumerated[toEnum[i]] = BigInt(i);
+				if (!value.fields.includes(value.default)) {
+					throw new ParameterError('Default value doesn\'t exist in enum.');
 				}
 
-				this.fields[rule] = enumerated;
+				const max = BigInt(Math.floor(Math.log2(value.fields.length)) + 1);
+				for (let i = 0; i < value.fields.length; i++) {
+					enumerated[value.fields[i]] = BigInt(i);
+				}
+
+				this.fields[field] = enumerated;
 				index += max;
 			}
 		}
 
 		this.length = Number(index);
+
+		const permissions: Permissions<T> = new Permissions<T>(0n, this);
+		for (const field in jsonSchema) {
+			const value: boolean | { default: string, fields: string[] } = jsonSchema[field];
+			if (typeof value === 'boolean') {
+				permissions.set(this.fields[field], value);
+			}
+			else {
+				permissions.set(this.fields[field], this.fields[field][value.default]);
+			}
+		}
+
+		this.default = permissions.valueOf();
+	}
+
+	createDefault(): Permissions<T> {
+		return new Permissions<T>(this.default, this);
 	}
 }
 
@@ -77,12 +98,16 @@ export class Permissions<T extends JsonSchema> {
 		return permissionsObject;
 	}
 
-	private constructor(permissions: bigint, schema: Schema<T>) {
+	constructor(permissions: bigint, schema: Schema<T>) {
 		this.permissions = permissions;
 		this.schema = schema;
 	}
 
-	is(permission: Data, value: bigint | boolean): boolean {
+	valueOf(): bigint {
+		return this.permissions;
+	}
+
+	is(permission: Field, value: bigint | boolean): boolean {
 		if (typeof value === 'boolean') {
 			value = value ? 1n : 0n;
 		}
@@ -94,7 +119,7 @@ export class Permissions<T extends JsonSchema> {
 		return value === this.permissions % 2n ** (permission.index + permission.length) >> permission.index;
 	}
 
-	set(permission: Data, value: bigint | boolean): void {
+	set(permission: Field, value: bigint | boolean): void {
 		if (typeof value === 'boolean') {
 			value = value ? 1n : 0n;
 		}
