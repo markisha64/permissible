@@ -14,7 +14,14 @@
     "version": "npm run format && git add -A src",
     "postversion" : "git push && git push --tags"
   },
-  "keywords": [],
+  "keywords": [
+    "permission",
+    "typescript",
+    "bitwise",
+    "bitmask",
+    "type",
+    "inference"
+  ],
   "author": "Marko Grizelj <marko.grizelj03@gmail.com>",
   "license": "MIT",
   "devDependencies": {
