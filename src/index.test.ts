@@ -80,3 +80,11 @@ test('string length', () => {
 test('base64', () => {
   expect(() => Permissions.fromBase64('aa?d', schema)).toThrow('Invalid base64 string');
 });
+
+test('should allow using the first enum value', () => {
+  const permissions: Permissions<typeof jsonSchema> = Permissions.fromJson(json, schema);
+
+  expect(permissions.is(schema.fields.type, schema.fields.type.user)).toBe(true);
+  permissions.set(schema.fields.type, schema.fields.type.moderator);
+  expect(permissions.is(schema.fields.type, schema.fields.type.moderator)).toBe(true);
+});
