@@ -110,7 +110,7 @@ export class Permissions<T extends JsonSchema> {
   }
 
   is(field: Field, value?: bigint): boolean {
-    if (!value) value = 1n;
+    if (value === undefined) value = 1n;
 
     if (field.length === 1n) {
       return !!(this.permissions & (1n << field.index)) === !!value;
