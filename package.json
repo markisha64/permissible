@@ -1,6 +1,6 @@
 {
   "name": "permissible",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Fast, space-effective node.js permissions library",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
